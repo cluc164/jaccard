@@ -1,10 +1,24 @@
 import numpy as np
-import random 
-
 import time
 
-# funky ReLU
-def funkyReLU( x ):
+def shingle(n, corpus):
+    shingles = list()
+    for start in range(0,len(corpus)-1, n-1):
+        shingles.append(corpus[start:start+n])
+    return shingles
+
+def integerize_shingles(shingles):
+    return [hash(shingle) for shingle in shingles]
+
+def numpy_fillna(data):
+    """Even out arrays with uneven length in a list."""
+    lens = np.array([len(i) for i in data])
+    mask = np.arange(lens.max()) < lens[:,None]
+    out = np.zeros(mask.shape)
+    out[mask] = np.concatenate(data)
+    return out
+
+def funkyReLU(x):
         x[x!=0] = 1
         return x
 
@@ -19,28 +33,39 @@ def array_compare(in_doc, corpus):
     return sims
 
 def numpy_compare(document, corpus):
-    result = np.array(corpus) - np.array(document).transpose()
-    return 1 - np.sum(funkyReLU(result), 1)/10000
+    result = corpus - document.transpose()
+    return 1 - np.sum(funkyReLU(result), 1)/corpus.shape[1]
 
 def compare_time(function, document, corpus):
     start = time.time()
-    function(document, corpus)
+    out = function(document, corpus)
     end = time.time()
-    return end - start
+    return (end - start, out)
 
 def main():
-    num_chars = 50
-    doc_size = 10
-    num_docs = 100000
+    corpus_text = [
+        "the quickest fox jumped over the lasfjdlk hjsfjf black dog",
+        "the quick brown fox jumped over the lazy dog",
+        "the quick brown dog jumped over the lazy fox",
+        "today is a very good day",
+        "fox is another word for attractive older woman",
+        "get over it",
+        "quick",
+        "black",
+        "for honor! and destiny!"
+    ]
+    document_text = "the quick brown fox jumps over the lazy dog" 
+    
+    corpus = numpy_fillna([integerize_shingles(shingle(2, document)) for document in corpus_text])
+    document = numpy_fillna([integerize_shingles(shingle(2, document_text)),corpus[0]])[0]
+    
+    arr_time = compare_time(array_compare, document, corpus)
+    num_time = compare_time(numpy_compare, document, corpus)
 
-    # generation can take a second based on the above numbers... so if it seems like it's frozen, it isn't
-    cur = [random.randint(0, num_chars) for _ in range(doc_size)]
-    documents = [[random.randint(0, num_chars) for _ in range(doc_size)] for _ in range(num_docs)]
-
-    arr_time = compare_time(array_compare, cur, documents)
-    num_time = compare_time(numpy_compare, cur, documents)
-
-    print("Array took:", arr_time)
-    print("Numpy took:", num_time)
-
+    print("Array took:", arr_time[0])
+    print("Numpy took:", num_time[0])
+    index = np.argmax(num_time[1])
+    print("The most similar document is at index", index)
+    print("|  \n|  \n|  ", corpus_text[index], "\n|  \n|  \n")
+    
 main()
