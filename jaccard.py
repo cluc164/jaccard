@@ -48,10 +48,10 @@ def main():
         "the quick brown fox jumped over the lazy dog",
         "the quick brown dog jumped over the lazy fox",
         "today is a very good day",
-        "fox is another word for attractive older woman",
+        "yeet",
         "get over it",
         "quick",
-        "black",
+        "blue",
         "for honor! and destiny!"
     ]
     document_text = "the quick brown fox jumps over the lazy dog" 
